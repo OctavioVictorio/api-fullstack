@@ -16,8 +16,8 @@
 ## 📦 Instalación y ejecución
 
 ## 1. Cloná el repositorio:
-    - git clone 
-    - cd 
+    - git clone https://github.com/OctavioVictorio/api-fullstack.git
+    - cd api-fullstack
 
 ## 2. Instalá las dependencias:
     - npm install
@@ -37,6 +37,7 @@
 
 ## 👤 Autor
     - Octavio Victorio
+    - https://github.com/OctavioVictorio
     
 ## 👤 Profesor
     - Agustín Invaldi 
