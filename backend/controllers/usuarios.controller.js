@@ -1,21 +1,4 @@
-const fs = require("fs");
-const path = require("path");
-const filePath = path.join(__dirname, "../db/usuarios.json");
-
-const leerUsuarios = () => {
-  const data = fs.readFileSync(filePath, "utf8");
-  return JSON.parse(data);
-}
-
-let usuarios = leerUsuarios();
-
-const escribirUsuarios = () => {
-  try{
-    fs.writeFileSync(filePath, JSON.stringify(usuarios, null, 2));
-  }catch(error){
-    console.error("Error al escribir los usuarios:", error);
-  }
-}
+const {Usuarios} = require("../models/");
 
 // Función para validar formato de email
 function emailValido(email) {
@@ -25,26 +8,33 @@ function emailValido(email) {
 
 // 1) GET /usuarios
 // Devuelve el listado completo de usuarios.
-const getUsuarios = (request, response) => {
-  response.json(usuarios);
-}
+const getUsuarios = async (request, response) => {
+    try{
+      const usuarios = await Usuarios.findAll();
+      response.json({data: usuarios, status: 200, message: "usuarios obtenidos de manera exitosa"});
+    }catch (err) {
+      response.status(500).json({ message: "Error al obtener los usuarios"});
+    }
+  }
 
 // 2) GET /usuarios/:id
 // Devuelve un usuario por su ID.
 // Si no se encuentra, devolver un error 404.
-const getUsuariosById = (request, response) => {
-    const usuario = usuarios.find(
-      (item) => item.id === parseInt(request.params.id)
-    );
-    if (!usuario) {
-      return response.json({ status: 404, message: "usuario no encontrado" });
+const getUsuariosById = async (request, response) => {
+    try{
+      const usuario = await Usuarios.findByPk(request.params.id);
+      if (!usuario) {
+        return response.json({ status: 404, message: "usuario no encontrado" });
+      }
+      response.json({
+        data: usuario,
+        status: 200,
+        message: "usuario obtenido de manera exitosa",
+      });
+    }catch (err) {
+      response.status(500).json({ message: "Error al obtener el usuario", error: err.message });
     }
-    response.json({
-      data: usuario,
-      status: 200,
-      message: "usuario obtenido de manera exitosa",
-    });
-}
+  }
 
 // 3) POST /usuarios
 // Recibe un nuevo usuario por req.body.
@@ -52,126 +42,111 @@ const getUsuariosById = (request, response) => {
 //  nombre, email, edad.
 // Asignar un id único automáticamente.
 // Devolver el usuario creado.
-const createUsuario = (request, response) => {
-    const { nombre, email, edad } = request.body;
-    // Validaciones
-    if (!nombre || !email || edad === undefined) {
-      return response.status(400).json({
-        status: 400,
-        message: "Faltan datos obligatorios (nombre, email o edad).",
+const createUsuario = async (request, response) => {
+  const { nombre, email, edad } = request.body;
+  try{
+      if (!nombre || !email || edad === undefined) {
+        return response.status(400).json({
+          status: 400,
+          message: "Faltan datos obligatorios (nombre, email o edad).",
+        });
+      }
+      if (!emailValido(email)) {
+        return response.status(400).json({
+          status: 400,
+          message: "El email no tiene un formato valido.",
+        });
+      }
+      if (typeof edad !== "number" || edad < 0) {
+        return response.status(400).json({
+          status: 400,
+          message: "La edad debe ser un número valido mayor que 0.",
+        });
+      }
+      const emailExistente = await Usuarios.findOne({ where: { email: email } });
+      if (emailExistente) {
+        return response.status(400).json({
+          status: 400,
+          message: "El email ya esta en uso.",
+        });
+      }
+      const nuevoUsuario = await Usuarios.create({ nombre, email, edad });
+      response.status(201).json({
+        message: "usuario creado de manera exitosa",
+        data: nuevoUsuario,
       });
-    }
-    if (!emailValido(email)) {
-      return response.status(400).json({
-        status: 400,
-        message: "El email no tiene un formato válido.",
-      });
-    }
-
-    if (typeof edad !== "number" || edad < 0) {
-      return response.status(400).json({
-        status: 400,
-        message: "La edad debe ser un número válido mayor que 0.",
-      });
-    }
-
-    const emailExistente = usuarios.find((u) => u.email === email);
-    if (emailExistente) {
-      return response.status(400).json({
-        status: 400,
-        message: "El email ya está en uso.",
-      });
-    }
-
-    const nuevoUsuario = { id: usuarios.length + 1, nombre, email, edad };
-    usuarios.push(nuevoUsuario);
-
-    escribirUsuarios(usuarios);
-
-    response.status(201).json({
-      data: nuevoUsuario,
-      status: 201,
-      message: "usuario creado de manera exitosa",
-    });
-}
+  }catch (err) {
+      response.status(500).json({ message: "Error al crear el usuario", error: err.message });
+      }  
+  }
 
 // 4) PUT /usuarios/:id
 // Actualiza los datos de un usuario existente.
 // Validar que el usuario exista antes de modificarlo.
 // Devolver el usuario actualizado.
-const updateUsuario = (request, response) => {
-    const usuario = usuarios.find(
-      (item) => item.id === parseInt(request.params.id)
-    );
-    if (!usuario) {
-      return response
-        .status(404)
-        .json({ status: 404, message: "usuario no encontrado" });
-    }
+const updateUsuario = async (request, response) => {
+  const usuario = await Usuarios.findByPk(request.params.id);
+  if (!usuario) {
+    return response
+      .status(404)
+      .json({ status: 404, message: "usuario no encontrado" });
+  }
 
-    const { nombre, email, edad } = request.body;
+  const { nombre, email, edad } = request.body;
 
-    // Validaciones
-    if (
-      email &&
-      usuarios.some((u) => u.email === email && u.id !== usuario.id)
-    ) {
-      return response.status(400).json({
-        status: 400,
-        message: "El email ya está en uso por otro usuario.",
-      });
-    }
-
-    if (email && !emailValido(email)) {
-      return response.status(400).json({
-        status: 400,
-        message: "El email no tiene un formato válido.",
-      });
-    }
-
-    if (edad !== undefined && (typeof edad !== "number" || edad < 0)) {
-      return response.status(400).json({
-        status: 400,
-        message: "La edad debe ser un número válido mayor que 0.",
-      });
-    }
-
-    usuario.nombre = nombre || usuario.nombre;
-    usuario.email = email || usuario.email;
-    usuario.edad = edad || usuario.edad;
-
-    escribirUsuarios(usuarios);
-
-    response.json({
-      data: usuario,
-      status: 200,
-      message: "usuario actualizado de manera exitosa",
+  // Validaciones
+  if (
+    email &&
+    usuarios.some((u) => u.email === email && u.id !== usuario.id)
+  ) {
+    return response.status(400).json({
+      status: 400,
+      message: "El email ya está en uso por otro usuario.",
     });
+  }
+
+  if (email && !emailValido(email)) {
+    return response.status(400).json({
+      status: 400,
+      message: "El email no tiene un formato válido.",
+    });
+  }
+
+  if (edad !== undefined && (typeof edad !== "number" || edad < 0)) {
+    return response.status(400).json({
+      status: 400,
+      message: "La edad debe ser un número valido mayor que 0.",
+    });
+  }
+
+  // Actualizar el usuario
+  usuario.nombre = nombre || usuario.nombre;
+  usuario.email = email || usuario.email;
+  usuario.edad = edad || usuario.edad;
+  await usuario.save();
+  response.json({
+    data: usuario,
+    status: 201,
+    message: "usuario actualizado de manera exitosa",
+  });
 }
 
 // 5) DELETE /usuarios/:id
 // Elimina un usuario por ID.
 // Devolver mensaje de confirmación.
-const deleteUsuario = (request, response) => {
-   let usuario = usuarios.find(
-     (item) => item.id === parseInt(request.params.id)
-   );
-   if (!usuario) {
-     return response.status(404).json({
-       status: 404,
-       message: "usuario no encontrado",
-     });
-   }
-
-   usuarios.splice(usuarios.indexOf(usuario), 1);
-
-   escribirUsuarios(usuarios);
-   
-   response.json({
-     data: usuario,
-     status: 200,
-     message: "usuario eliminado de manera exitosa",
-   }); 
+const deleteUsuario = async (request, response) => {
+  const usuario = await Usuarios.findByPk(request.params.id);
+  if (!usuario) {
+    return response
+      .status(404)
+      .json({ status: 404, message: "usuario no encontrado" });
+  }
+  await usuario.destroy();
+  response.json({
+    data: usuario,
+    status: 201,
+    message: "usuario eliminado de manera exitosa",
+  });
 }
 
 module.exports = {

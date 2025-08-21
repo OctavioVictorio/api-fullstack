@@ -13,5 +13,15 @@
     "id": 3,
     "nombre": "Producto 3",
     "precio": 300
+  },
+  {
+    "id": 4,
+    "nombre": "pepe",
+    "precio": 3000
+  },
+  {
+    "id": 5,
+    "nombre": "smart tv",
+    "precio": 3000
   }
 ]
