@@ -8,10 +8,14 @@ const {
     deleteUsuario,
 } = require("../controllers/usuarios.controller");
 
-router.get("/", getUsuarios);
-router.get("/:id", getUsuariosById);
-router.post("/", createUsuario);
-router.put("/:id", updateUsuario);
-router.delete("/:id", deleteUsuario);
+const verifyToken = require("../middlewares/verifyToken");
+const isAdmin = require("../middlewares/isAdmin");
+
+router.get("/", verifyToken, getUsuarios);
+router.get("/:id", verifyToken, getUsuariosById);
+router.post("/", verifyToken, isAdmin, createUsuario);
+router.put("/:id", verifyToken, isAdmin, updateUsuario);
+router.delete("/:id", verifyToken, isAdmin, deleteUsuario);
+router.put("/:id/rol", verifyToken, isAdmin, updateRol);
 
 module.exports = router;

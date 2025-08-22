@@ -12,11 +12,12 @@ const verifyToken = async (req, res, next) => {
     try {
         const decodedToken = jwt.verify(token, "secreto123");
         req.userId = decodedToken.id;
+        req.userRol = decodedToken.rol; // Guardar el rol del usuario en la solicitud
         next();
     } catch (error) {
         return res.status(401).json({ message: "Token inválido o expirado" });
     }
 };
 
-module.exports = { verifyToken };
-   
+module.exports = verifyToken
+
