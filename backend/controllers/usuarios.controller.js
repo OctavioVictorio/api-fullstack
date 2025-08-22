@@ -1,5 +1,7 @@
 const {Usuarios} = require("../models/");
 
+const { Op } = require("sequelize"); 
+
 // Función para validar formato de email
 function emailValido(email) {
   const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -85,51 +87,69 @@ const createUsuario = async (request, response) => {
 // Validar que el usuario exista antes de modificarlo.
 // Devolver el usuario actualizado.
 const updateUsuario = async (request, response) => {
-  const usuario = await Usuarios.findByPk(request.params.id);
-  if (!usuario) {
-    return response
-      .status(404)
-      .json({ status: 404, message: "usuario no encontrado" });
-  }
+    try {
+        const usuario = await Usuarios.findByPk(request.params.id);
+        if (!usuario) {
+            return response.status(404).json({
+                status: 404,
+                message: "usuario no encontrado"
+            });
+        }
 
-  const { nombre, email, edad } = request.body;
+        const { nombre, email, edad } = request.body;
+        
+        // 1. Validar si el email ya está en uso por otro usuario.
+        if (email && email !== usuario.email) {
+            if (!emailValido(email)) {
+                return response.status(400).json({
+                    status: 400,
+                    message: "El email no tiene un formato válido."
+                });
+            }
 
-  // Validaciones
-  if (
-    email &&
-    usuarios.some((u) => u.email === email && u.id !== usuario.id)
-  ) {
-    return response.status(400).json({
-      status: 400,
-      message: "El email ya está en uso por otro usuario.",
-    });
-  }
+            const emailExistente = await Usuarios.findOne({
+                where: {
+                    email: email,
+                    id: { [Op.ne]: usuario.id } 
+                }
+            });
+            if (emailExistente) {
+                return response.status(400).json({
+                    status: 400,
+                    message: "El email ya está en uso por otro usuario."
+                });
+            }
+        }
 
-  if (email && !emailValido(email)) {
-    return response.status(400).json({
-      status: 400,
-      message: "El email no tiene un formato válido.",
-    });
-  }
+        // 2. Validar que la edad sea un número válido.
+        if (edad !== undefined && (typeof edad !== "number" || edad < 0)) {
+            return response.status(400).json({
+                status: 400,
+                message: "La edad debe ser un número válido mayor que 0."
+            });
+        }
+        
+        // 3. Actualizar los datos del usuario.
+        usuario.nombre = nombre || usuario.nombre;
+        usuario.email = email || usuario.email;
+        usuario.edad = edad || usuario.edad;
+        
+        await usuario.save();
+        
+        response.status(200).json({
+            data: usuario,
+            status: 200,
+            message: "usuario actualizado de manera exitosa",
+        });
 
-  if (edad !== undefined && (typeof edad !== "number" || edad < 0)) {
-    return response.status(400).json({
-      status: 400,
-      message: "La edad debe ser un número valido mayor que 0.",
-    });
-  }
+    } catch (err) {
+        response.status(500).json({
+            message: "Error al actualizar el usuario",
+            error: err.message
+        });
+    }
+};
 
-  // Actualizar el usuario
-  usuario.nombre = nombre || usuario.nombre;
-  usuario.email = email || usuario.email;
-  usuario.edad = edad || usuario.edad;
-  await usuario.save();
-  response.json({
-    data: usuario,
-    status: 201,
-    message: "usuario actualizado de manera exitosa",
-  });
-}
 
 // 5) DELETE /usuarios/:id
 // Elimina un usuario por ID.
@@ -149,10 +169,39 @@ const deleteUsuario = async (request, response) => {
   });
 }
 
+
+const updateRol = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { rol } = req.body;
+
+        // Validar que el rol sea uno de los permitidos
+        const rolesValidos = ["admin", "moderador", "cliente"];
+        if (!rolesValidos.includes(rol)) {
+            return res.status(400).json({ message: "Rol inválido" });
+        }
+
+        const usuario = await Usuarios.findByPk(id);
+        if (!usuario) {
+            return res.status(404).json({ message: "Usuario no encontrado" });
+        }
+
+        usuario.rol = rol;
+        await usuario.save();
+
+        return res.status(200).json({ message: "Rol actualizado con éxito", usuario });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: "Error al actualizar el rol" });
+    }
+};
+
+
 module.exports = {
   getUsuarios,
   getUsuariosById,
   createUsuario,
   updateUsuario,
   deleteUsuario,
+  updateRol
 };
