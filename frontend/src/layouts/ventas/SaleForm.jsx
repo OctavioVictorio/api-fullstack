@@ -1,17 +1,18 @@
-// components/ventas/SaleForm.jsx
 import React, { useRef } from "react";
+
 import { useSaleForm } from "./useSaleForm";
-import { InputText } from "primereact/inputtext";
 import { InputNumber } from "primereact/inputnumber";
 import { Button } from "primereact/button";
 import { Card } from "primereact/card";
 import { ProgressSpinner } from "primereact/progressspinner";
 import { Toast } from "primereact/toast";
 import { useNavigate } from "react-router-dom";
+import { Dropdown } from "primereact/dropdown"; 
+import { InputText } from "primereact/inputtext"; 
 
 const SaleForm = () => {
   const toastRef = useRef(null);
-  const { formik, isEditing } = useSaleForm({ toastRef });
+  const { formik, isEditing, productos, usuarios } = useSaleForm({ toastRef });
   const navigate = useNavigate();
 
   return (
@@ -23,33 +24,54 @@ const SaleForm = () => {
       >
         {formik.isSubmitting && (
           <div className="mb-3 text-center">
-            <ProgressSpinner
-              style={{ width: "50px", height: "50px" }}
-              strokeWidth="8"
-              fill="var(--surface-ground)"
-              animationDuration=".5s"
-            />
+            <ProgressSpinner style={{ width: "40px", height: "40px" }} />
             <div>Guardando...</div>
           </div>
         )}
-
         <form onSubmit={formik.handleSubmit} className="p-fluid">
           <div className="field">
-            <label htmlFor="producto">Producto</label>
-            <InputText
-              id="producto"
-              name="producto"
-              value={formik.values.producto}
-              onChange={formik.handleChange}
+            <label htmlFor="productoId">Producto</label>
+            <Dropdown
+              id="productoId"
+              name="productoId"
+              value={formik.values.productoId}
+              options={productos}
+              optionLabel="nombre"
+              optionValue="id"
+              onChange={(e) => formik.setFieldValue("productoId", e.value)}
               onBlur={formik.handleBlur}
+              placeholder="Seleccione un producto"
               className={
-                formik.touched.producto && formik.errors.producto
+                formik.touched.productoId && formik.errors.productoId
                   ? "p-invalid"
                   : ""
               }
             />
-            {formik.touched.producto && formik.errors.producto && (
-              <small className="p-error">{formik.errors.producto}</small>
+            {formik.touched.productoId && formik.errors.productoId && (
+              <small className="p-error">{formik.errors.productoId}</small>
+            )}
+          </div>
+          
+          <div className="field">
+            <label htmlFor="usuarioId">Usuario</label>
+            <Dropdown
+              id="usuarioId"
+              name="usuarioId"
+              value={formik.values.usuarioId}
+              options={usuarios}
+              optionLabel="nombre"
+              optionValue="id"
+              onChange={(e) => formik.setFieldValue("usuarioId", e.value)}
+              onBlur={formik.handleBlur}
+              placeholder="Seleccione un usuario"
+              className={
+                formik.touched.usuarioId && formik.errors.usuarioId
+                  ? "p-invalid"
+                  : ""
+              }
+            />
+            {formik.touched.usuarioId && formik.errors.usuarioId && (
+              <small className="p-error">{formik.errors.usuarioId}</small>
             )}
           </div>
 
@@ -82,31 +104,18 @@ const SaleForm = () => {
               value={formik.values.total}
               onValueChange={(e) => formik.setFieldValue("total", e.value || 0)}
               onBlur={formik.handleBlur}
-              className={
-                formik.touched.total && formik.errors.total ? "p-invalid" : ""
-              }
+              disabled={true} 
             />
-            {formik.touched.total && formik.errors.total && (
-              <small className="p-error">{formik.errors.total}</small>
-            )}
           </div>
 
           <div className="field">
-            <label htmlFor="fecha">Fecha (YYYY-MM-DD)</label>
+            <label htmlFor="fecha">Fecha</label>
             <InputText
               id="fecha"
               name="fecha"
               value={formik.values.fecha}
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-              placeholder="Ej: 2025-06-18"
-              className={
-                formik.touched.fecha && formik.errors.fecha ? "p-invalid" : ""
-              }
+              disabled={true} 
             />
-            {formik.touched.fecha && formik.errors.fecha && (
-              <small className="p-error">{formik.errors.fecha}</small>
-            )}
           </div>
 
           <div className="flex justify-content-between mt-3">

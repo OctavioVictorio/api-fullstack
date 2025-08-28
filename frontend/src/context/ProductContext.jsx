@@ -13,7 +13,7 @@ export const ProductProvider = ({ children }) => {
   const getProductos = async () => {
     try {
       const response = await axios.get(API_URL);
-      setProductos(response.data);
+      setProductos(response.data.data);
     } catch (err) {
       console.log("Error al obtener los productos:", err);
     }
@@ -27,7 +27,6 @@ export const ProductProvider = ({ children }) => {
         const existe = prev.find((p) => p.id === response.data.id);
         return existe ? prev : [...prev, response.data];
       });
-      console.log("Productos creados:", response.data);
     } catch (err) {
       console.log("Error al crear el producto:", err);
     }

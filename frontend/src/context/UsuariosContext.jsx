@@ -9,42 +9,37 @@ export const UsuariosProvider = ({ children }) => {
   const [usuarios, setUsuarios] = useState([]);
 
   // Obtener Usuarios (GET)
-  const getUsuarios = async () => {
+const getUsuarios = async () => {
     try {
       const response = await axios.get(API_URL);
-      setUsuarios(response.data);
+      const nuevosUsuarios = response.data.data;
+      if (JSON.stringify(usuarios) !== JSON.stringify(nuevosUsuarios)) {
+        setUsuarios(nuevosUsuarios);
+      }
     } catch (err) {
       console.log("Error al obtener los usuarios:", err);
     }
   };
 
   // Crear Usuario (POST)
-  const createUsuarios = async (usuarios) => {
+  const createUsuarios = async (usuario) => {
     try {
-      console.log("Usuarios a crear:", usuarios);
-      const response = await axios.post(API_URL, usuarios);
-      setUsuarios((prev) => {
-        const existe = prev.find((p) => p.id === response.data.id);
-        return existe ? prev : [...prev, response.data];
-      });
-      console.log("Usuarios creados:", response.data);
+      await axios.post(API_URL, usuario);
+      await getUsuarios();
     } catch (err) {
-      console.log("Error al crear el Usuarios:", err);
+      console.error("Error al crear el usuario:", err);
+      throw err; 
     }
   };
 
   // Editar Usuarios (PUT)
-  const editUsuarios = async (id, updatedUsuarios) => {
+  const editUsuarios = async (id, updatedUsuario) => {
     try {
-      await axios.put(`${API_URL}/${id}`, updatedUsuarios);
-      setUsuarios((prev) =>
-        prev.map((usuarios) =>
-          usuarios.id === id ? { ...usuarios, ...updatedUsuarios } : usuarios
-        )
-      );
+      await axios.put(`${API_URL}/${id}`, updatedUsuario);
       await getUsuarios();
     } catch (err) {
-      console.log("Error al editar el Usuarios:", err);
+      console.error("Error al editar el usuario:", err);
+      throw err; 
     }
   };
 
@@ -52,9 +47,22 @@ export const UsuariosProvider = ({ children }) => {
   const deleteUsuarios = async (id) => {
     try {
       await axios.delete(`${API_URL}/${id}`);
-      setUsuarios((prev) => prev.filter((usuarios) => usuarios.id !== id));
+      setUsuarios((prev) => prev.filter((usuario) => usuario.id !== id));
     } catch (err) {
-      console.log("Error al eliminar el Usuarios:", err);
+      console.error("Error al eliminar el usuario:", err);
+      throw err; 
+    }
+  };
+
+  // Editar Roles
+  const updateRol = async (id, newRol) => {
+    try {
+      await axios.put(`${API_URL}/${id}/rol`, newRol);
+      console.log(`Rol del usuario ${id} actualizado a ${newRol.rol}`);
+      await getUsuarios(); 
+    } catch (err) {
+      console.error("Error al actualizar el rol:", err);
+      throw err;
     }
   };
 
@@ -66,6 +74,7 @@ export const UsuariosProvider = ({ children }) => {
         createUsuarios,
         editUsuarios,
         deleteUsuarios,
+        updateRol,
       }}
     >
       {children}

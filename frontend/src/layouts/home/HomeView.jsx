@@ -1,34 +1,22 @@
-import { useContext } from "react";
-import { Card } from "primereact/card";
-import { Button } from "primereact/button";
-import { Link } from "react-router-dom";
-import { AuthContext } from "../../context/AuthContext";
+// src/layouts/home/HomeView.jsx
+
+import React from 'react';
+import { Card } from 'primereact/card';
 
 const HomeView = () => {
-    const { user } = useContext(AuthContext); 
-    
-    return (
-        <div
-        className="p-4 min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-100 via-pink-100 to-yellow-100"
-        >
-            <Card
-                title="Bienvenido a la gestion de productos y usuarios"
-                className="w-full md:w-2/3 lg:w-1/2 text-center shadow-4 border-round-2xl"
-            >
-                {user ?
-                    <div className="mt-3 flex flex-column md:flex-row md:justify-center gap-3">
-                        <p className="m-0 text-lg text-gray-700">
-                            Explorá, gestioná y creá tus usuarios y productos con facilidad
-                        </p>
-                    </div>
-                :
-                    <div>
-                        <p className="text-gray-600">Por favor, inicia sesión para continuar.</p>
-                    </div>
-                }
-            </Card>
-        </div>
-    );
+return (
+<div className="p-4 flex flex-column align-items-center justify-content-center h-full">
+    <Card
+    title="Bienvenido a la gestión de productos y usuarios"
+    className="text-center shadow-4"
+    >
+    <p className="m-0">
+        (aplicación fullstack en JavaScript donde el frontend (React) consume los datos expuestos por el backend (Express), permitiendo realizar CRUDs completos)
+    </p>
+    </Card>
+</div>
+);
 };
 
 export default HomeView;
+

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useContext } from "react";
 
 import { Button } from "primereact/button";
 import { Card } from "primereact/card";
@@ -12,10 +12,14 @@ import { Toast } from "primereact/toast";
 import { useUsuarios } from "../../context/UsuariosContext";
 import { exportToPdf } from "../../utils/ExportToPdf";
 
+import { AuthContext } from "../../context/AuthContext";
+
 const UsuariosView = () => {
   const toast = useRef(null);
   const navigate = useNavigate();
   
+  const { user } = useContext(AuthContext);
+
   const { usuarios, getUsuarios, deleteUsuarios } = useUsuarios();
   const [globalFilter, setGlobalFilter] = useState("");
 
@@ -55,20 +59,25 @@ const UsuariosView = () => {
     });
   };
 
-  const actionBodyTemplate = (rowData) => (
-    <div className="flex gap-2">
-      <Button
-        icon="pi pi-pencil"
-        className="p-button-rounded p-button-info"
-        onClick={() => handleEdit(rowData.id)}
-      />
-      <Button
-        icon="pi pi-trash"
-        className="p-button-rounded p-button-danger"
-        onClick={() => handleDelete(rowData.id)}
-      />
-    </div>
-  );
+  const actionBodyTemplate = (rowData) => {
+    if (user && user.rol === "admin") {
+      return (
+        <div className="flex gap-2">
+          <Button
+            icon="pi pi-pencil"
+            className="p-button-rounded p-button-info"
+            onClick={() => handleEdit(rowData.id)}
+          />
+          <Button
+            icon="pi pi-trash"
+            className="p-button-rounded p-button-danger"
+            onClick={() => handleDelete(rowData.id)}
+          />
+        </div>
+      );
+    }
+    return "No autorizado";
+  }
 
   const columns = [
     { field: "id", header: "ID" },
@@ -82,14 +91,9 @@ const UsuariosView = () => {
       <Toast ref={toast} />
       <ConfirmDialog />
 
-      <Button
-        label="Inicio"
-        icon="pi pi-home"
-        className="p-button"
-        onClick={() => navigate("/")}
-      />
       <Card title="Listado de Usuarios" className="shadow-4 border-round p-3">
         <div className="flex flex-column md:flex-row md:justify-between md:align-items-center mb-4 gap-4">
+        {user && user.rol === "admin" && (
           <div>
             <Button
               label="Crear Usuarios"
@@ -98,9 +102,10 @@ const UsuariosView = () => {
               onClick={() => navigate("/usuarios/crear")}
             />
           </div>
-          <span className="p-input-icon-left" style={{ minwidth: "300px" }}>
+        )}
+          <span className="p-input-icon-left" style={{ minWidth: "300px" }}>
             <InputText
-              placeholder=" Buscar usuario"
+              placeholder="Buscar usuario"
               value={globalFilter}
               onChange={(e) => setGlobalFilter(e.target.value)}
               className="w-full"
@@ -109,7 +114,7 @@ const UsuariosView = () => {
         </div>
 
         <DataTable
-          value={usuarios}
+          value={Array.isArray(usuarios) ? usuarios : []}
           paginator
           rows={5}
           emptyMessage="No hay usuarios"
@@ -117,12 +122,18 @@ const UsuariosView = () => {
           header="Usuarios registrados"
           className="p-datatable-striped p-datatable-gridlines"
         >
-          <column field="id" header="ID" sortable style={{ width: "70px" }} />
+          <Column field="id" header="ID" sortable style={{ width: "70px" }} />
           <Column field="nombre" header="Nombre" sortable />
           <Column field="email" header="Email" sortable />
           <Column
             field="edad"
             header="Edad"
+            sortable
+            style={{ width: "100px" }}
+          />
+          <Column
+            field="rol"
+            header="Rol"
             sortable
             style={{ width: "100px" }}
           />

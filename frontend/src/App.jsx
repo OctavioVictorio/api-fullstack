@@ -1,70 +1,77 @@
-import { Fragment } from "react";
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-// Componentes de las vistas
-import Home from "./layouts/home/index.jsx";
-import ProductsRoutes from "./layouts/products/index.jsx";
-import UsuariosRoutes from "./layouts/usuarios/index.jsx";
-import SaleRoutes from "./layouts/ventas/index.jsx";
-import LoginForm from "./layouts/auth/LoginForm.jsx";
-import RegisterForm from "./layouts/auth/RegisterForm.jsx";
-import Navbar from "./layouts/home/Navbar.jsx";
+import { Fragment } from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
-// Contextos
-import { ProductProvider } from "./context/ProductContext";
-import { UsuariosProvider } from "./context/UsuariosContext.jsx";
-import { SaleProvider } from "./context/SaleContext";
-import { AuthProvider } from "./context/AuthContext.jsx";
+import Home from './layouts/home/index';
 
-// Componentes de protección
-import PrivateRoute from "./utils/PrivateRoute.jsx";
-import PublicRoute from "./utils/PublicRoute.jsx";
+import ProductRoutes from './layouts/products/index';
+import { ProductProvider } from './context/ProductContext';
 
+import UsuariosRoutes from './layouts/usuarios/index';
+import { UsuariosProvider } from './context/UsuariosContext'
+
+import SalesRoutes from './layouts/ventas/index';
+import { SaleProvider } from './context/SaleContext';
+
+import { AuthProvider } from './context/AuthContext';
+import LoginForm from './layouts/auth/LoginForm';
+import RegisterForm from './layouts/auth/RegisterForm';
+
+import PrivateRoute from './utils/PrivateRoute';
+
+import Navbar from './components/Navbar';
+
+import 'primereact/resources/themes/lara-dark-indigo/theme.css';
+import 'primereact/resources/primereact.min.css';
+import 'primeicons/primeicons.css';
 
 function App() {
   return (
     <Router>
-      <AuthProvider>
-      <Navbar />
-        <Routes>
-          {/* Rutas Públicas */}
-          <Route element={<PublicRoute />}>
-            <Route path="/inicio-sesion" element={<LoginForm />} />
-            <Route path="/registro" element={<RegisterForm />} />
-          </Route>
-
-          {/* Rutas Públicas accesibles por todos (sin redirección) */}
-          <Route path="/" element={<Home />} />
-          
-          {/* Rutas Privadas */}
-          <Route element={<PrivateRoute />}>
-            <Route
-              path="/productos/*"
-              element={
-                <ProductProvider>
-                  <ProductsRoutes />
-                </ProductProvider>
-              }
-            />
-            <Route
-              path="/usuarios/*"
-              element={
-                <UsuariosProvider>
-                  <UsuariosRoutes />
-                </UsuariosProvider>
-              }
-            />
-            <Route
-              path="/ventas/*"
-              element={
-                <SaleProvider>
-                  <SaleRoutes />
-                </SaleProvider>
-              }
-            />
-          </Route>
-        </Routes>
-      </AuthProvider>
-    </Router>
+        <AuthProvider>
+          <Navbar />
+          <Fragment>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path='/inicio-sesion' element={<LoginForm/>}/>
+              <Route path='/registro' element={<RegisterForm/>}/>
+              <Route
+                path="/productos/*"
+                element={
+                  <PrivateRoute>
+                    <ProductProvider>
+                      <ProductRoutes />
+                    </ProductProvider>
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/usuarios/*"
+                element={
+                  <PrivateRoute>
+                    <UsuariosProvider>
+                      <UsuariosRoutes />
+                    </UsuariosProvider>
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/ventas/*"
+                element={
+                  <PrivateRoute>
+                    <ProductProvider>
+                      <UsuariosProvider>
+                        <SaleProvider>
+                          <SalesRoutes />
+                        </SaleProvider>
+                      </UsuariosProvider>
+                    </ProductProvider>
+                  </PrivateRoute>
+                }
+              />
+            </Routes>
+          </Fragment>
+        </AuthProvider>
+      </Router>
   );
 }
 

@@ -1,5 +1,4 @@
 import React, { useRef } from "react";
-
 import { useUsuariosForm } from "./useUsuariosForm";
 import { InputText } from "primereact/inputtext";
 import { InputNumber } from "primereact/inputnumber";
@@ -8,11 +7,19 @@ import { Card } from "primereact/card";
 import { useNavigate } from "react-router-dom";
 import { ProgressSpinner } from "primereact/progressspinner";
 import { Toast } from "primereact/toast";
+import { Dropdown } from "primereact/dropdown"; 
         
 const UsuariosForm = () => {
   const toastRef = useRef(null);
   const { formik, isEditing } = useUsuariosForm({ toastRef });
   const navigate = useNavigate();
+
+  const roles = [
+    { label: "Admin", value: "admin" },
+    { label: "Moderador", value: "moderador" },
+    { label: "Cliente", value: "cliente" },
+  ];
+
   return (
     <div className="flex justify-content-center p-4">
       <Toast ref={toastRef} />
@@ -86,8 +93,27 @@ const UsuariosForm = () => {
               <small className="p-error">{formik.errors.edad}</small>
             )}
           </div>
+          
+          <div className="field">
+            <label htmlFor="rol">Rol</label>
+            <Dropdown
+              id="rol"
+              name="rol"
+              value={formik.values.rol}
+              options={roles}
+              onChange={(e) => formik.setFieldValue("rol", e.value)}
+              onBlur={formik.handleBlur}
+              placeholder="Seleccione un rol"
+              className={
+                formik.touched.rol && formik.errors.rol ? "p-invalid" : ""
+              }
+            />
+            {formik.touched.rol && formik.errors.rol && (
+              <small className="p-error">{formik.errors.rol}</small>
+            )}
+          </div>
 
-          <div className="flex justify-content-between">
+          <div className="flex justify-content-between mt-3">
             <Button
               className="p-button-success"
               label={isEditing ? "Actualizar" : "Crear"}

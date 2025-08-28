@@ -96,7 +96,7 @@ const updateUsuario = async (request, response) => {
             });
         }
 
-        const { nombre, email, edad } = request.body;
+        const { nombre, email, edad, rol } = request.body;
         
         // 1. Validar si el email ya está en uso por otro usuario.
         if (email && email !== usuario.email) {
@@ -129,10 +129,20 @@ const updateUsuario = async (request, response) => {
             });
         }
         
-        // 3. Actualizar los datos del usuario.
+        // 3. Validar que el rol sea uno de los permitidos.
+        const rolesValidos = ["admin", "moderador", "cliente"];
+        if (rol && !rolesValidos.includes(rol)) {
+            return response.status(400).json({
+                status: 400,
+                message: "Rol inválido. Los roles permitidos son: admin, moderador, cliente."
+            });
+        }
+        
+        // 4. Actualizar los datos del usuario.
         usuario.nombre = nombre || usuario.nombre;
         usuario.email = email || usuario.email;
         usuario.edad = edad || usuario.edad;
+        usuario.rol = rol || usuario.rol; 
         
         await usuario.save();
         
@@ -169,39 +179,10 @@ const deleteUsuario = async (request, response) => {
   });
 }
 
-
-const updateRol = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { rol } = req.body;
-
-        // Validar que el rol sea uno de los permitidos
-        const rolesValidos = ["admin", "moderador", "cliente"];
-        if (!rolesValidos.includes(rol)) {
-            return res.status(400).json({ message: "Rol inválido" });
-        }
-
-        const usuario = await Usuarios.findByPk(id);
-        if (!usuario) {
-            return res.status(404).json({ message: "Usuario no encontrado" });
-        }
-
-        usuario.rol = rol;
-        await usuario.save();
-
-        return res.status(200).json({ message: "Rol actualizado con éxito", usuario });
-    } catch (error) {
-        console.error(error);
-        return res.status(500).json({ message: "Error al actualizar el rol" });
-    }
-};
-
-
 module.exports = {
   getUsuarios,
   getUsuariosById,
   createUsuario,
   updateUsuario,
-  deleteUsuario,
-  updateRol
+  deleteUsuario
 };

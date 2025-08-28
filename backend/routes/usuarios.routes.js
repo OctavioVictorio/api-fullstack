@@ -13,9 +13,9 @@ const isAdmin = require("../middlewares/isAdmin");
 
 router.get("/", verifyToken, getUsuarios);
 router.get("/:id", verifyToken, getUsuariosById);
+
 router.post("/", verifyToken, isAdmin, createUsuario);
 router.put("/:id", verifyToken, isAdmin, updateUsuario);
 router.delete("/:id", verifyToken, isAdmin, deleteUsuario);
-router.put("/:id/rol", verifyToken, isAdmin, updateRol);
 
 module.exports = router;

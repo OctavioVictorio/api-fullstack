@@ -1,4 +1,4 @@
-import React, {useRef, useEffect, useState} from "react";
+import React, {useRef, useEffect, useState, useContext} from "react";
 
 import { Button } from "primereact/button";
 import { Card } from "primereact/card";
@@ -12,9 +12,13 @@ import { Toast } from "primereact/toast";
 import { useProducts } from "../../context/ProductContext";
 import { exportToPdf } from "../../utils/ExportToPdf";
 
+import { AuthContext } from "../../context/AuthContext";
+
 const ProductView = () => {
   const toast = useRef(null);
   const navigate = useNavigate();
+
+  const { user } = useContext(AuthContext);
 
   const { productos, getProductos, deleteProducto} = useProducts();
   const [globalFilter, setGlobalFilter] = useState("");
@@ -55,20 +59,25 @@ const ProductView = () => {
     });
   };
 
-  const actionBodyTemplate = (rowData) => (
-    <div className="flex gap-2">
-      <Button
-        icon="pi pi-pencil"
-        className="p-button-rounded p-button-info"
-        onClick={() => handleEdit(rowData.id)}
-      />
-      <Button
-        icon="pi pi-trash"
-        className="p-button-rounded p-button-danger"
-        onClick={() => handleDelete(rowData.id)}
-      />
-    </div>
-  );
+  const actionBodyTemplate = (rowData) => {
+    if (user && user.rol === "admin") {
+      return(
+        <div className="flex gap-2">
+          <Button
+            icon="pi pi-pencil"
+            className="p-button-rounded p-button-info"
+            onClick={() => handleEdit(rowData.id)}
+          />
+          <Button
+            icon="pi pi-trash"
+            className="p-button-rounded p-button-danger"
+            onClick={() => handleDelete(rowData.id)}
+          />
+        </div>
+      );
+    }
+    return "No autorizado";
+  }
 
   const columns = [
     { field: "id", header: "ID" },
@@ -80,22 +89,18 @@ const ProductView = () => {
       <Toast ref={toast} />
       <ConfirmDialog />
 
-      <Button
-        label="Inicio"
-        icon="pi pi-home"
-        className="p-button"
-        onClick={() => navigate("/")}
-      />
       <Card title="Listado de Productos" className="shadow-4 border-round p-3">
         <div className="flex flex-column md:flex-row md:justify-between md:align-items-center mb-4 gap-4">
-          <div>
-            <Button
-              label="Crear Producto"
-              icon="pi pi-plus"
-              className="p-button-info"
+          {user && user.rol === "admin" && (
+            <div>
+              <Button
+                label="Crear Producto"
+                icon="pi pi-plus"
+                className="p-button-info"
               onClick={() => navigate("/productos/crear")}
             />
           </div>
+          )}
           <span className="p-input-icon-right">
             <InputText
               placeholder=" Buscar producto"
@@ -106,13 +111,13 @@ const ProductView = () => {
           </span>
         </div>
         <DataTable
-          value={productos}
+          value={Array.isArray(productos) ? productos : []}
           emptyMessage="No hay productos"
           paginator
           rows={5}
           className="p-datatable-sm"
         >
-          <column field="id" header="ID" sortable style={{ width: "70px" }} />
+          <Column field="id" header="ID" sortable style={{ width: "70px" }} />
           <Column field="nombre" header="Nombre" sortable />
           <Column field="precio" header="Precio" sortable />
           <Column

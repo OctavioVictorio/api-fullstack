@@ -12,7 +12,7 @@ export const SaleProvider = ({ children }) => {
   const getSale = async () => {
     try {
       const response = await axios.get(API_URL);
-      setSale(response.data);
+      setSale(response.data.data);
     } catch (err) {
       console.log("Error al obtener las ventas:", err);
     }
@@ -26,7 +26,6 @@ export const SaleProvider = ({ children }) => {
         const existe = prev.find((p) => p.id === response.data.id);
         return existe ? prev : [...prev, response.data];
       });
-      console.log("Ventas creados:", response.data);
     } catch (err) {
       console.log("Error al crear la venta:", err);
     }
